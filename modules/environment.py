@@ -1,5 +1,10 @@
 import h3.api.numpy_int as h3
-from node import Node
+import pandas as pd
+import numpy as np
+import os, sys
+sys.path.append(os.path.abspath('../data'))
+from modules.node import Node
+from modules.orders import Orders
 
 class CitySim:
     '''
@@ -16,7 +21,7 @@ class CitySim:
     :param: resolution - specifies the edge size of each hexagon. Default 
                          is 9 with edge length ~ 173 meter
     '''
-    __slots__ = ['geoJson', 'resolution', 'polyline', 'hexagons', 'nodes', 'city_time']
+    __slots__ = ['geoJson', 'resolution', 'polyline', 'hexagons', 'nodes', 'city_time', 'lookup_table', 'orders']
 
     def __init__(self, geoJson, resolution=9):
         self.geoJson = geoJson
@@ -26,6 +31,16 @@ class CitySim:
         self.hexagons = list(h3.polyfill(geoJson, resolution))
         self.nodes = [Node(node_id) for node_id in self.hexagons]
         self.city_time = 0
-        #self.fleet_size = None
-        #self.taxis = {}
+        self.orders = np.load(os.path.abspath('data/prep_data.npy'))
+        self.lookup_table = pd.read_pickle(os.path.abspath('data/lookup_table.pkl'))
+
+    def generate_orders(self):
+        for node in self.nodes:
+            orders = Orders(self.city_time, node.get_node_id(), self.lookup_table, self.orders)
+            node.set_orders(orders)
+            print(node.get_orders())
+    
+    def update_time(self):
+        self.city_time += 1
+
 

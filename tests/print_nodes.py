@@ -8,8 +8,9 @@ geoJson = {'type': 'Polygon',
                   [40.770477, -73.950370], 
                   [40.782619, -73.980991]
                  ]]}
-m = CitySim(geoJson)
 
-ids = []
-for node in m.nodes:
-    print(node.node_id)
+city = CitySim(geoJson)
+
+while city.city_time <= 143:
+    city.generate_orders()
+    city.update_time()
