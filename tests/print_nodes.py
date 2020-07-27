@@ -13,9 +13,6 @@ geoJson = {'type': 'Polygon',
 start_time = time.time()
 
 city = CitySim(geoJson)
-
-while city.city_time <= 143:
-    city.generate_orders()
-    city.update_time()
+city.step()
 
 print("Simulation took ", time.time() - start_time, "to run")
