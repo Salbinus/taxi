@@ -42,5 +42,3 @@ class CitySim:
     
     def update_time(self):
         self.city_time += 1
-
-

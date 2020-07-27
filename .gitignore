@@ -1,0 +1,10 @@
+share
+Lib
+Include
+Scripts
+.ipynb_checkpoints
+pyvenv.cfg
+data
+etc
+#vs code
+.vscode

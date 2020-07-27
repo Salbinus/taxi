@@ -17,4 +17,3 @@ class Orders:
         amount_of_samples = round(stats.truncnorm.rvs(_min, _max, loc=mean, scale=sd, size=1)[0])
         indices = np.random.choice(population.shape[0], amount_of_samples, replace=False)
         return population[indices]
-
