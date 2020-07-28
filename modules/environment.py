@@ -48,7 +48,9 @@ class CitySim:
             node.set_orders(orders)
             print(node.get_orders())
     
-''    def initializetaxis
+    def initialize_taxis(self):
+        pass
+
 
     def update_time(self):
         '''Updates city_time in the environment'''
