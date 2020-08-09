@@ -1,10 +1,14 @@
 import h3.api.numpy_int as h3
 import pandas as pd
 import numpy as np
+from scipy import stats
 import os, sys
+import random
 sys.path.append(os.path.abspath('../data'))
 from modules.node import Node
-from modules.orders import Orders
+from modules.order import Order
+from modules.taxi import Taxi
+
 
 class CitySim:
     '''
@@ -23,7 +27,7 @@ class CitySim:
     '''
     __slots__ = ['geoJson', 'resolution', 'polyline', 'hexagons', 'nodes'
                 , 'city_time', 'lookup_table', 'orders', 'max_timesteps', 'days'
-                , 'taxis']
+                , 'num_taxis', 'taxis', 'valid_nodes']
 
     def __init__(self, geoJson, resolution=9):
         self.geoJson = geoJson
@@ -31,26 +35,57 @@ class CitySim:
         self.polyline = self.geoJson['coordinates'][0]
         self.polyline.append(self.polyline[0])
         self.hexagons = list(h3.polyfill(geoJson, resolution))
-        self.nodes = [Node(node_id) for node_id in self.hexagons]
+        self.lookup_table = pd.read_pickle(os.path.abspath('data/lookup_table.pkl'))
+        self.valid_nodes = list(self.lookup_table.index.levels[0])
+        self.nodes = [Node(node_id) for node_id in self.valid_nodes]#[50:100]
         self.city_time = 0
         self.orders = np.load(os.path.abspath('data/prep_data.npy'))
-        self.lookup_table = pd.read_pickle(os.path.abspath('data/lookup_table.pkl'))
-
         self.max_timesteps = 143
         self.days = 2
+        self.num_taxis = 15
+        self.taxis = [Taxi(_id) for _id in range(self.num_taxis)]
 
-        self.taxis = {}
 
-    def generate_orders(self):
-        '''Generates orders per timestep per node'''
+    def generate_orders(self, location):
+        '''
+        This function generates the available orders per timestep.
+        '''
+        time, lookup_table, orders = self.city_time, self.lookup_table, self.orders
+        population = np.zeros((1,6))
+        try:
+            mean, sd, _min, _max = lookup_table.loc[(location, time), :]
+            population = orders[(orders[:,0] == location) & (orders[:,2] == time)]
+        except:
+            'KeyError:'
+        if np.sum(population) == 0:
+            #print(population, "No orders here at {}".format(time))
+            return population
+        else:
+            amount_of_samples = np.random.poisson(mean)
+            if amount_of_samples > len(population):
+                amount_of_samples = len(population)
+            indices = np.random.choice(population.shape[0], int(amount_of_samples), replace=False)
+            return population[indices]
+
+    def get_observation(self):
+        '''
+        Generates orders for all nodes
+        TODO: add taxi to order ratio per node
+        '''
+        #Observation = namedtuple('Observation','')
         for node in self.nodes:
-            orders = Orders(self.city_time, node.get_node_id(), self.lookup_table, self.orders)
+            orders = self.generate_orders(node.node_id)#Order(self.city_time, node.get_node_id(), self.lookup_table, self.orders)
             node.set_orders(orders)
-            print(node.get_orders())
-    
-    def initialize_taxis(self):
-        pass
+            n_taxis = node.get_num_taxis(self.taxis)
+            obs = (node.node_id, n_taxis, len(orders))
+            print(obs)
 
+
+    def initialize_taxis(self):
+        node_ids = [node.node_id for node in self.nodes]
+        for taxi in self.taxis:
+            taxi.set_position(random.choice(node_ids))
+            #print(taxi.node)
 
     def update_time(self):
         '''Updates city_time in the environment'''
@@ -61,7 +96,7 @@ class CitySim:
         Everything what should happen per timestep is declared here. Initially, the 
         nested for loops are placed here but will be replaced later.
         '''
-        for day in range(self.days):
-            for time in range(self.max_timesteps):
-                self.generate_orders()
-                self.update_time()
+        if self.city_time == 0:
+            self.initialize_taxis()
+        self.get_observation()
+        self.update_time()

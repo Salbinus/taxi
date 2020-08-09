@@ -1,9 +1,9 @@
 from modules.node import Node
-from modules.orders import Orders
+from modules.order import Order
 
 class Taxi(object):
     '''Class representation of a Taxi'''
-    __slots__ = ('taxi_id','online','offline','order','node','city_time')
+    __slots__ = ('taxi_id','online','onservice','order','node','city_time')
 
     def __init__(self, taxi_id):
         self.taxi_id = taxi_id

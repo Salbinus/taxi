@@ -23,24 +23,31 @@ class GaussianDistribution:
 
 
 class Node(object):
-    __slots__ = ('node_id','valid_nodes','neighbors','orders','taxis','num_idle_taxis'
-                ,'num_offline_taxis','order_generator','layers_neighbors')
+    __slots__ = ('node_id','valid_nodes','neighbors','orders','num_taxis','num_idle_taxis'
+                ,'num_offline_taxis','order_generator','layers_neighbors', 'state')
     
     def __init__(self, node_id):
         self.node_id = node_id
         self.neighbors = list(h3.hex_ring(self.node_id))
         self.orders = None
-        self.num_orders = 0
-        self.taxis = {}
+        # self.num_orders = 0
+        self.num_taxis = 0
         self.num_idle_taxis = 0
         self.num_offline_taxis = 0
         self.order_generator = None
         self.layers_neighbors = None
-        self.neighbors = list(get_layers_neighbors(1)[1])
-#        self.taxis = {}
+        self.neighbors = list(self.get_layers_neighbors(1)[1])
+        self.state = tuple
 
     def get_node_id(self):
         return self.node_id
+
+    def set_orders(self, new_orders):
+        self.orders = new_orders
+
+    def get_num_taxis(self, list_of_taxis):
+        self.num_taxis = len([_ for _ in list_of_taxis if _.node == self.node_id])
+        return self.num_taxis
 
     def clean_node(self):
         self.orders = None
