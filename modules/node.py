@@ -36,7 +36,7 @@ class Node(object):
         self.num_offline_taxis = 0
         self.order_generator = None
         self.layers_neighbors = None
-        self.neighbors = list(self.get_layers_neighbors(1)[1])
+        #self.neighbors = list(self.get_layers_neighbors(1)[1])
         self.state = tuple
 
     def get_node_id(self):
@@ -45,8 +45,29 @@ class Node(object):
     def set_orders(self, new_orders):
         self.orders = new_orders
 
+    def get_orders(self):
+        return self.orders
+
+    def get_available_orders(self):
+        orders = self.orders
+        for _ in self.layers_neighbors:
+            nb_orders = _.get_orders()
+            orders = np.append(orders, nb_orders, axis=0)
+        return orders
+  
+    def set_neighbors(self, list_of_nbs):
+        '''
+        '''
+        self.layers_neighbors = list_of_nbs
+        #print(list_of_nbs)
+
+    # def get_neighbors_orders(self):
+        # neighbors_orders = [node]
+        #for nb in self.neighbors:
+
+
     def get_num_taxis(self, list_of_taxis):
-        self.num_taxis = len([_ for _ in list_of_taxis if _.node == self.node_id])
+        self.num_taxis = len([_ for _ in list_of_taxis if _.node==self.node_id and _.online==True and _.onservice==False])
         return self.num_taxis
 
     def clean_node(self):
@@ -303,9 +324,3 @@ class Node(object):
         assert self.num_orders == len(self.orders)
         return reward
 
-    def set_neighbors(self, valid_nodes):
-        '''
-        Probably useless...
-        '''
-        nbs = [-100 if nb not in valid_nodes else nb for nb in self.neighbors]
-        self.neighbors = nbs

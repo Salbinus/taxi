@@ -37,14 +37,21 @@ class CitySim:
         self.hexagons = list(h3.polyfill(geoJson, resolution))
         self.lookup_table = pd.read_pickle(os.path.abspath('data/lookup_table.pkl'))
         self.valid_nodes = list(self.lookup_table.index.levels[0])
-        self.nodes = [Node(node_id) for node_id in self.valid_nodes]#[50:100]
+        self.nodes = [Node(node_id) for node_id in self.valid_nodes][50:60]
         self.city_time = 0
         self.orders = np.load(os.path.abspath('data/prep_data.npy'))
         self.max_timesteps = 143
         self.days = 2
-        self.num_taxis = 15
+        self.num_taxis = 2
         self.taxis = [Taxi(_id) for _id in range(self.num_taxis)]
+        self.set_node_neighbors()
 
+    def set_node_neighbors(self):
+        for node in self.nodes:
+            nb_ids = node.get_layers_neighbors(1)[1]
+            print(nb_ids)
+            nbs = [node for node in self.nodes if node.node_id in nb_ids]
+            node.set_neighbors(nbs)
 
     def generate_orders(self, location):
         '''
@@ -70,17 +77,26 @@ class CitySim:
     def get_observation(self):
         '''
         Generates orders for all nodes
-        TODO: add taxi to order ratio per node
+        TODO:   create this as class variable, acces it later to get the actual number 
+                number of orders (which is known later when action space it set for 
+                each individual node)
         '''
         #Observation = namedtuple('Observation','')
+        observation = []
         for node in self.nodes:
             orders = self.generate_orders(node.node_id)#Order(self.city_time, node.get_node_id(), self.lookup_table, self.orders)
             node.set_orders(orders)
             n_taxis = node.get_num_taxis(self.taxis)
-            obs = (node.node_id, n_taxis, len(orders))
+            obs = [node.node_id, self.city_time, n_taxis, len(orders)]
+            observation.append(obs)
             print(obs)
+        return observation
 
-
+    def get_action_space(self):
+        for node in self.nodes:
+            actions = node.get_available_orders()
+            print(node.node_id, actions)
+            
     def initialize_taxis(self):
         node_ids = [node.node_id for node in self.nodes]
         for taxi in self.taxis:
@@ -93,10 +109,10 @@ class CitySim:
 
     def step(self):
         '''
-        Everything what should happen per timestep is declared here. Initially, the 
-        nested for loops are placed here but will be replaced later.
+        Everything what should happen per timestep is declared here.
         '''
         if self.city_time == 0:
             self.initialize_taxis()
         self.get_observation()
+        self.get_action_space()
         self.update_time()
