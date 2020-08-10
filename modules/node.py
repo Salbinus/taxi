@@ -39,6 +39,12 @@ class Node(object):
         #self.neighbors = list(self.get_layers_neighbors(1)[1])
         self.state = tuple
 
+    '''
+    TODO:   share taxi objects between environment and node so that 
+            the dispatching functionality can be handled from here 
+            same thing as with the neighbors layers thing
+    '''
+    
     def get_node_id(self):
         return self.node_id
 
@@ -57,14 +63,11 @@ class Node(object):
   
     def set_neighbors(self, list_of_nbs):
         '''
+        this method gets a list of node objects and overwrites the initial
+        list of neighbors, layers_neighbors respectively
         '''
         self.layers_neighbors = list_of_nbs
-        #print(list_of_nbs)
-
-    # def get_neighbors_orders(self):
-        # neighbors_orders = [node]
-        #for nb in self.neighbors:
-
+        #print(self.node_id, [_.node_id for _ in list_of_nbs])
 
     def get_num_taxis(self, list_of_taxis):
         self.num_taxis = len([_ for _ in list_of_taxis if _.node==self.node_id and _.online==True and _.onservice==False])
@@ -91,6 +94,9 @@ class Node(object):
 
     def get_num_idle_taxis(self):
         return self.num_idle_taxis
+
+    def random_dispatcher(self):
+
 
     def get_num_idle_taxis_loop(self):
         temp_idle_taxi = 0

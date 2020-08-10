@@ -42,14 +42,13 @@ class CitySim:
         self.orders = np.load(os.path.abspath('data/prep_data.npy'))
         self.max_timesteps = 143
         self.days = 2
-        self.num_taxis = 2
+        self.num_taxis = 5
         self.taxis = [Taxi(_id) for _id in range(self.num_taxis)]
         self.set_node_neighbors()
 
     def set_node_neighbors(self):
         for node in self.nodes:
             nb_ids = node.get_layers_neighbors(1)[1]
-            print(nb_ids)
             nbs = [node for node in self.nodes if node.node_id in nb_ids]
             node.set_neighbors(nbs)
 
@@ -77,7 +76,7 @@ class CitySim:
     def get_observation(self):
         '''
         Generates orders for all nodes
-        TODO:   create this as class variable, acces it later to get the actual number 
+        TODO:  create this as class variable, acces it later to get the actual number 
                 number of orders (which is known later when action space it set for 
                 each individual node)
         '''
@@ -95,13 +94,17 @@ class CitySim:
     def get_action_space(self):
         for node in self.nodes:
             actions = node.get_available_orders()
-            print(node.node_id, actions)
-            
+            #print(node.node_id, actions)
+            return actions
+
     def initialize_taxis(self):
         node_ids = [node.node_id for node in self.nodes]
         for taxi in self.taxis:
             taxi.set_position(random.choice(node_ids))
             #print(taxi.node)
+
+    def random_dispatch(self):
+        return
 
     def update_time(self):
         '''Updates city_time in the environment'''
@@ -111,8 +114,16 @@ class CitySim:
         '''
         Everything what should happen per timestep is declared here.
         '''
-        if self.city_time == 0:
-            self.initialize_taxis()
+        self.get_observation()
+        self.update_time()
+        self.get_action_space()
+        #return next_state, reward, done, info
+
+    def reset(self):
+        assert self.city_time == 0, "the reset method is exclusive for the first interval"
+        self.initialize_taxis()
+        for taxi in self.taxis
         self.get_observation()
         self.get_action_space()
-        self.update_time()
+
+        
