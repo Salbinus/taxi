@@ -26,6 +26,13 @@ class Taxi(object):
         self.order = None
         self.onservice = False
 
+    def take_order(self, order):
+        """take order, taxi show up at destination when order is finished"""
+        assert self.online == True
+        self.set_order_start(order)
+        self.onservice = True
+        self.node.num_idle_taxis -= 1    
+
     def update_city_time(self):
         self.city_time += 1
 

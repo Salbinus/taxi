@@ -1,5 +1,6 @@
 import h3.api.numpy_int as h3
 import numpy as np
+import random
 
 class PoissonDistribution:
 
@@ -23,21 +24,23 @@ class GaussianDistribution:
 
 
 class Node(object):
-    __slots__ = ('node_id','valid_nodes','neighbors','orders','num_taxis','num_idle_taxis'
-                ,'num_offline_taxis','order_generator','layers_neighbors', 'state')
+    __slots__ = ('node_id','valid_nodes','neighbors','orders','taxis','num_taxis','num_idle_taxis'
+                ,'num_offline_taxis','order_generator','layers_neighbors', 'observation','actionspace')
     
     def __init__(self, node_id):
         self.node_id = node_id
         self.neighbors = list(h3.hex_ring(self.node_id))
         self.orders = None
         # self.num_orders = 0
+        self.taxis = []
         self.num_taxis = 0
         self.num_idle_taxis = 0
         self.num_offline_taxis = 0
         self.order_generator = None
         self.layers_neighbors = None
         #self.neighbors = list(self.get_layers_neighbors(1)[1])
-        self.state = tuple
+        self.observation = None
+        self.actionspace = None
 
     '''
     TODO:   share taxi objects between environment and node so that 
@@ -59,6 +62,7 @@ class Node(object):
         for _ in self.layers_neighbors:
             nb_orders = _.get_orders()
             orders = np.append(orders, nb_orders, axis=0)
+        self.actionspace = orders
         return orders
   
     def set_neighbors(self, list_of_nbs):
@@ -69,9 +73,14 @@ class Node(object):
         self.layers_neighbors = list_of_nbs
         #print(self.node_id, [_.node_id for _ in list_of_nbs])
 
-    def get_num_taxis(self, list_of_taxis):
-        self.num_taxis = len([_ for _ in list_of_taxis if _.node==self.node_id and _.online==True and _.onservice==False])
-        return self.num_taxis
+    def set_taxis(self, list_of_taxis):
+        for taxi in list_of_taxis:
+            if taxi.node == self.node_id and taxi.online == True:
+                # print(self.node_id)
+                self.taxis.append(taxi)
+                taxi.set_position(self)
+                # print(taxi.node.node_id)
+        return self.taxis
 
     def clean_node(self):
         self.orders = None
@@ -96,8 +105,18 @@ class Node(object):
         return self.num_idle_taxis
 
     def random_dispatcher(self):
+        for taxi in self.taxis:
+            action = random.choice(self.actionspace)
+            taxi.take_order(action)
+            print(taxi.order)
 
-
+    def set_actionspace(self, actionspace):
+        self.actionspace = actionspace
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+    
     def get_num_idle_taxis_loop(self):
         temp_idle_taxi = 0
         for key, taxi in self.taxis.iteritems():

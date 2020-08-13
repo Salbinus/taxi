@@ -12,10 +12,10 @@ geoJson = {'type': 'Polygon',
 
 start_time = time.time()
 
-city = CitySim(geoJson)
-city.reset()
-
-action = 
-#city.step()
+env = CitySim(geoJson)
+env.initialize_taxis(200)
+env.reset()
+#action = 
+#env.step()
 
 print("Simulation took ", time.time() - start_time, "to run")
